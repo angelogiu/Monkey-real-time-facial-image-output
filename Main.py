@@ -84,15 +84,23 @@ with mp_face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True, min_detection
         index_length = None
         hand_to_head = None
         middle_length = None
+        mouth_smile = None
 
         if face_results.multi_face_landmarks:
             face = face_results.multi_face_landmarks[0]
             upper_lip = face.landmark[13]
             lower_lip = face.landmark[14]
             open_mouth = abs(upper_lip.y - lower_lip.y)
+            left_mouth_corner = face.landmark[61]
+            corner_nose = face.landmark[49]
 
             top_head = face.landmark[10]
             # print("Mouth Distance is", open_mouth)
+
+            mouth_smile = np.sqrt(
+                np.square(corner_nose.x - left_mouth_corner.x) + np.square(corner_nose.y - left_mouth_corner.y))
+            smile_ratio = mouth_smile / abs(corner_nose.z)
+            print("Mouth Courner L is", smile_ratio)
 
         if hand_results.multi_hand_landmarks:
             hand = hand_results.multi_hand_landmarks[0]
@@ -113,12 +121,12 @@ with mp_face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True, min_detection
             middle_length = np.sqrt(
                 np.square(middle_tip.x - middle_base.x) + np.square(middle_tip.y - middle_base.y))
 
-            print("Middle finger length is", middle_length)
+            # print("Middle finger length is", middle_length)
             # print("hand to head length is", hand_to_head)
             # print("Index length is", index_length)
             # print("Finger to mouth distance is", tip_to_mouth)
 
-        def generatemonkey(open_mouth, tip_to_mouth, index_length, hand_to_head, middle_length):
+        def generatemonkey(open_mouth, tip_to_mouth, index_length, hand_to_head, middle_length, mouth_smile):
             if open_mouth is not None and open_mouth >= 0.05:
                 return "angrymonkey"
             elif tip_to_mouth is not None and tip_to_mouth < 0.025:
@@ -129,12 +137,16 @@ with mp_face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True, min_detection
                 return "handonhead"
             elif middle_length is not None and middle_length > 0.27:
                 return "finger"
+            elif mouth_smile is not None and corner_nose.z < -0.04 and mouth_smile < 0.08:
+                return "happy"
+            elif mouth_smile is not None and corner_nose.z < -0.04 and mouth_smile > 0.15:
+                return "sad"
 
             else:
                 return "neutral"
 
         monkeyface = generatemonkey(
-            open_mouth, tip_to_mouth, index_length, hand_to_head, middle_length)
+            open_mouth, tip_to_mouth, index_length, hand_to_head, middle_length, mouth_smile)
 
         monkeyimg = monkeyimages.get(monkeyface)
 
