@@ -137,9 +137,9 @@ with mp_face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True, min_detection
                 return "handonhead"
             elif middle_length is not None and middle_length > 0.27:
                 return "finger"
-            elif mouth_smile is not None and corner_nose.z < -0.04 and mouth_smile < 0.08:
+            elif mouth_smile is not None and smile_ratio < 2:
                 return "happy"
-            elif mouth_smile is not None and corner_nose.z < -0.04 and mouth_smile > 0.15:
+            elif mouth_smile is not None and smile_ratio > 3.2:
                 return "sad"
 
             else:
